@@ -1,0 +1,17 @@
+#!/bin/bash
+
+SEARCH_STRING="$1"
+
+last_commit_touching() {
+    git log --format="%H %at %ad" --follow "$1" | head -n 1
+}
+
+ag "$SEARCH_STRING" | while read line ; do
+FILE_PATH="$(echo "$line" | cut -d ':' -f1)"
+LINE="$(echo "$line" | cut -d ':' -f2)"
+LCT="$(last_commit_touching "$FILE_PATH")"
+HASH="$(echo "$LCT" | cut -d ' ' -f1)"
+TIMESTAMP="$(echo "$LCT" | cut -d ' ' -f2)"
+DATE="$(echo "$LCT" | cut -d ' ' -f3-)"
+echo -e "$TIMESTAMP\t$FILE_PATH\t$DATE\t$LINE"
+done | sort -k1 -t '\t' -n

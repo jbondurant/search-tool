@@ -1,0 +1,19 @@
+#!/bin/bash
+
+SEARCH_STRING="$1"
+
+last_commit_touching() {
+    git log --format="%H %at %ad" --follow "$1" | head -n 1
+}
+
+last_timestamp_touching_line() {
+    git blame -p -L "$2,$2" "$FILE_PATH" |
+        grep author-time | cut -d ' ' -f2
+}
+
+ag "$SEARCH_STRING" | while read line ; do
+IFS=':' read -r FILE_PATH LINE_NUMBER IGNORED <<< "$line"
+TIMESTAMP="$(last_timestamp_touching_line "$FILE_PATH" "$LINE_NUMBER")"
+DATE="$(date -r "$TIMESTAMP" "+%Y-%m-%d %H:%M:%S")"
+echo -e "$TIMESTAMP\t$DATE\t$FILE_PATH:$LINE_NUMBER"
+done | sort -k1 -t '\t' -n
